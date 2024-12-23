@@ -29,7 +29,7 @@ router.post('/register', async (req, res) => {
         const newUser = new User({
             username,
             email,
-            password,
+            password, // Password will be hashed before saving in User model's pre-save hook
         });
 
         // Save the user to database
@@ -52,16 +52,16 @@ router.post('/login', async (req, res) => {
         // Find the user using their email
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(400).json({ message: 'Invalid credentails' });
+            return res.status(400).json({ message: 'Invalid credentials' });
         }
 
         // Compare the entered password with the hashed password
-        const isPasswordMatch = await bcrypt.compare(password, user.password); // Use bcrypt for password check
+        const isPasswordMatch = await bcrypt.compare(password, user.password); 
         if (!isPasswordMatch) {
-            return res.status(400).json({ message: 'Invalid credentails' });
+            return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        // Create the payload for the JWT token (you can customize this if needed)
+        // Create the payload for the JWT token
         const payload = {
             userId: user._id,
             username: user.username,
@@ -69,7 +69,7 @@ router.post('/login', async (req, res) => {
         };
 
         // Generate a JWT token with a 7-day expiration
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' }); // Token valid for 7 days
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
 
         res.status(200).json({ message: 'Login successful', token });
     } catch (error) {

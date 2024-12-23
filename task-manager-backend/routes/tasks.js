@@ -18,13 +18,9 @@ router.get('/', protect, async (req, res) => {
         const { page = 1, limit = 10, priority, completed, filterBy } = req.query;
         const query = { user: req.user.userId };
 
-        // Filter tasks by priority if provided
         if (priority) query.priority = priority;
-
-        // Filter tasks based on whether they're completed or not
         if (completed) query.completed = completed === 'true';
 
-        // Filter tasks by deadline (today or upcoming)
         if (filterBy === 'today') {
             const today = new Date();
             query.deadline = { $gte: today.setHours(0, 0, 0, 0), $lt: today.setHours(23, 59, 59, 999) };
@@ -32,15 +28,12 @@ router.get('/', protect, async (req, res) => {
             query.deadline = { $gte: new Date() };
         }
 
-        // Fetch tasks with pagination
         const tasks = await Task.find(query)
-            .skip((page - 1) * limit)  // Skip tasks based on the current page
-            .limit(parseInt(limit));  // Limit the number of tasks returned
+            .skip((page - 1) * limit)
+            .limit(parseInt(limit));
 
-        // Get total number of tasks for pagination metadata
         const totalTasks = await Task.countDocuments(query);
 
-        // Send tasks and pagination info
         res.status(200).json({
             success: true,
             tasks,
